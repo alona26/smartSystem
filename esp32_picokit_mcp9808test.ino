@@ -18,7 +18,15 @@ products from Adafruit!
 
 // Create the MCP9808 temperature sensor object
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+//wifi parameters
+#define Wifi_SSID "brgt2"
+#define wifi_pass "0505508820"
 
+//Adafruit Io
+#define AIO_SERVER     "io.adafruit.com"
+#define AIO_SERVERPORT "1883"
+#define AIO_USERNAME   "1993gbd"
+#define IO_KEY         "aio_vgcT59T5a9P1dO5xKamgqOi9DDro"
 void setup() {
   Serial.begin(9600);
   Serial.println("MCP9808 demo");
@@ -46,7 +54,7 @@ void loop() {
   
   //Serial.println("Shutdown MCP9808.... ");
   //tempsensor.shutdown(); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere
-  if(c>26.00)
+  if(c<27.9)
   {
     digitalWrite(4, HIGH);
   }

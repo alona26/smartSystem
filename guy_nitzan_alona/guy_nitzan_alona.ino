@@ -17,15 +17,15 @@
 
 /************************* WiFi Access Point *********************************/
 
-#define WLAN_SSID       "BRGT"
-#define WLAN_PASS       "0505508820"
+#define WLAN_SSID       "G6_4437"
+#define WLAN_PASS       "00199800"
 
 /************************* Adafruit.io Setup *********************************/
 
 #define AIO_SERVER      "io.adafruit.com"
 #define AIO_SERVERPORT  1883                   // use 8883 for SSL
 #define AIO_USERNAME    "1993gbd"
-#define AIO_KEY          "aio_Zmrc68MgU1XRXoIXapix3x69NhCf"
+#define AIO_KEY          "aio_GxEa88NaBxGyWCL7OI8mZbEoUdFo"
 
 
 /************ Global State (you don't need to change this!) ******************/
@@ -95,6 +95,7 @@ void setup() {
 
 void loop() {
    MQTT_connect();
+   int value= analogRead(33); 
   float c = tempsensor.readTempC();
   float f = c * 9.0 / 5.0 + 32;
   Serial.print("Temp: "); Serial.print(c); Serial.print("*C\t"); 
@@ -124,6 +125,7 @@ void loop() {
       if (subscription == &onoffbutton) {
         float value_from_cloud_float;
         value_from_cloud_float = atof((char *)onoffbutton.lastread);
+        if(value<2000){
         if(value_from_cloud_float >= 27.20)
         {
           digitalWrite(4, HIGH);    
@@ -131,6 +133,7 @@ void loop() {
         else
         {
            digitalWrite(4, LOW);
+        }
         }
         Serial.print(F("Got temp from cloud in float: "));
         Serial.println(value_from_cloud_float);

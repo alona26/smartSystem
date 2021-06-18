@@ -16,15 +16,15 @@
 
 /************************* WiFi Access Point *********************************/
 
-#define WLAN_SSID "Shenkar-New"
-#define WLAN_PASS "Shenkarwifi"
+#define WLAN_SSID "Rozner1234"
+#define WLAN_PASS "RoznerAir1234"
 
 /************************* Adafruit.io Setup *********************************/
 
 #define AIO_SERVER "io.adafruit.com"
 #define AIO_SERVERPORT 1883 // use 8883 for SSL
 #define AIO_USERNAME "1993gbd"
-#define AIO_KEY "aio_GxEa88NaBxGyWCL7OI8mZbEoUdFo"
+#define AIO_KEY "aio_tCwB56UZ2BV2ZjHLhulJLcvM8tDR"
 
 /************ Global State (you don't need to change this!) ******************/
 
@@ -56,8 +56,11 @@ Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 // Bug workaround for Arduino 1.6.6, it seems to need a function declaration
 // for some reason (only affects ESP8266, likely an arduino-builder bug).
 void MQTT_connect();
-const int led_pin=10;
-int flag=0;
+const int led_pin = 10;
+const double fan = 23.00;
+const int light_outside = 2300;
+const int far = 3200;
+
 void setup()
 {
     Serial.begin(115200);
@@ -66,7 +69,7 @@ void setup()
     delay(1000);
 
     pinMode(led_pin, OUTPUT);
-      
+
     // Connect to WiFi access point.
     Serial.println();
     Serial.println();
@@ -102,19 +105,21 @@ void loop()
     MQTT_connect();
     char *counter("57");
     delay(2000);
-    int valueP= analogRead(34);
-    bool personB;
-    if(valueP>3200){
-    personB = 1;
+    int valueP = analogRead(34);
+    int personB;
+    if (valueP > far)
+    {
+        personB = 1;
     }
-    else{
-      personB = 0;
-      }
+    else
+    {
+        personB = 0;
+    }
     delay(200);
     Serial.print(F("\nSending value "));
     Serial.print(personB);
     Serial.print("...");
-     if (!person.publish(personB))
+    if (!person.publish(personB))
     {
         Serial.println(personB);
         Serial.println("Failed");
@@ -122,7 +127,7 @@ void loop()
     else
     {
         Serial.println(F("OK! person"));
-    } 
+    }
     int value = analogRead(33);
     Serial.print(F("\nSending value "));
     Serial.print(value);
@@ -137,10 +142,9 @@ void loop()
         Serial.println(F("OK! light"));
     }
 
-    
     float c = tempsensor.readTempC();
     float f = c * 9.0 / 5.0 + 32;
-    
+
     Serial.print("Temp: ");
     Serial.print(c);
     Serial.print("*C\t");
@@ -162,7 +166,7 @@ void loop()
     Adafruit_MQTT_Subscribe *subscription2;
     Adafruit_MQTT_Subscribe *subscription3;
     delay(200);
-   
+
     while (subscription3 = mqtt.readSubscription(3000))
     {
         if (subscription3 == &persono)
@@ -184,41 +188,41 @@ void loop()
                     delay(200);
                     while (subscription2 = mqtt.readSubscription(3000))
                     {
-                        
+
                         if (subscription2 == &tempo)
                         {
                             float value_tem;
                             value_tem = atof((char *)tempo.lastread);
                             if (value_person)
                             {
-                                if (value_light > 2300)
+                                if (value_light > light_outside)
                                 {
-                                    if (value_tem > 33.00)
+                                    if (value_tem > fan)
                                     {
-                                        for(int i=100; i<255; i++)
+                                        for (int i = 100; i < 255; i++)
                                         {
-                                          analogWrite(led_pin, i);
-                                          //valueP=0;
-                                          delay(5);                  
+                                            analogWrite(led_pin, i);
+                                            //valueP=0;
+                                            delay(5);
                                         }
                                     }
-                                     else{
-                                      analogWrite(led_pin, 0);
-                                      delay(5);
+                                    else
+                                    {
+                                        analogWrite(led_pin, 0);
+                                        delay(5);
+                                    }
                                 }
-                                }
-                                 else
+                                else
                                 {
-                                      analogWrite(led_pin, 0);
-                                      delay(5);
+                                    analogWrite(led_pin, 0);
+                                    delay(5);
                                 }
-                               
                             }
-                             else
-                                {
-                                      analogWrite(led_pin, 0);
-                                      delay(5);
-                                }
+                            else
+                            {
+                                analogWrite(led_pin, 0);
+                                delay(5);
+                            }
                         }
                     }
                 }
@@ -226,35 +230,35 @@ void loop()
         }
     }
 }
-    // Function to connect and reconnect as necessary to the MQTT server.
-    // Should be called in the loop function and it will take care if connecting.
-    void MQTT_connect()
+// Function to connect and reconnect as necessary to the MQTT server.
+// Should be called in the loop function and it will take care if connecting.
+void MQTT_connect()
+{
+    int8_t ret;
+
+    // Stop if already connected.
+    if (mqtt.connected())
     {
-        int8_t ret;
-
-        // Stop if already connected.
-        if (mqtt.connected())
-        {
-            return;
-        }
-
-        Serial.print("Connecting to MQTT... ");
-
-        uint8_t retries = 3;
-        while ((ret = mqtt.connect()) != 0)
-        { 
-          // connect will return 0 for connected
-            Serial.println(mqtt.connectErrorString(ret));
-            Serial.println("Retrying MQTT connection in 5 seconds...");
-            mqtt.disconnect();
-            delay(5000); // wait 5 seconds
-            retries--;
-            if (retries == 0)
-            {
-                // basically die and wait for WDT to reset me
-                while (1)
-                    ;
-            }
-        }
-        Serial.println("MQTT Connected!");
+        return;
     }
+
+    Serial.print("Connecting to MQTT... ");
+
+    uint8_t retries = 3;
+    while ((ret = mqtt.connect()) != 0)
+    {
+        // connect will return 0 for connected
+        Serial.println(mqtt.connectErrorString(ret));
+        Serial.println("Retrying MQTT connection in 5 seconds...");
+        mqtt.disconnect();
+        delay(5000); // wait 5 seconds
+        retries--;
+        if (retries == 0)
+        {
+            // basically die and wait for WDT to reset me
+            while (1)
+                ;
+        }
+    }
+    Serial.println("MQTT Connected!");
+}
